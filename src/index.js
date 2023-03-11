@@ -1,16 +1,13 @@
 // import './css/styles.css';
 // import debounce from "lodash.debounce";
 
-// const DEBOUNCE_DELAY = 300;
-// const box = document.querySelector("#search-box");
-
-// import { fetchCountries } from "./fetchCountries.js";
-
-// box.addEventListener("input", debounce(() => {
-//     fetchCountries(box.value)
-// }, DEBOUNCE_DELAY));
-
-import ApiContent from "./content-api";
+import Notiflix from 'notiflix';
+import ApiContent from "./js/content-api";
+import photosTemplate from './js/img-templates';
+// Notiflix.Notify.success('Sol lucet omnibus');
+// Notiflix.Notify.failure('Qui timide rogat docet negare');
+// Notiflix.Notify.warning('Memento te hominem esse');
+// Notiflix.Notify.info('Cogito ergo sum');
 
 const refs = {
     cardContainer: document.querySelector('.gallery'),
@@ -25,8 +22,25 @@ function onSearch(e) {
     e.preventDefault();
 
     const form = e.currentTarget;
-    // const searchQuery = form.elements.searchQuery.value;
-    apiContent.query = e.currentTarget.elements.searchQuery.value;
-    // console.log(searchQuery); 
-    apiContent.fetchItems().then(items => {console.log(items) });
- }
+    apiContent.query = e.currentTarget.elements.searchQuery.value.trim();
+    if (apiContent.query === "") {
+        return Notiflix.Notify.failure('Please enter search words');
+    }
+
+    const items = apiContent.fetchItems();
+    items.then((data) => {
+        if (data.totalHits === 0) {
+            return Notiflix.Notify.failure('There are no images matching your search query. Please try again');
+        }
+        // console.log(data.totalHits);
+        // console.log(data.hits);
+        markupPhotos(data);
+    });
+    
+}
+ 
+function markupPhotos(photos) {
+    // refs.cardContainer.insertAdjacentHTML('beforeend', photosTemplate(photos)); 
+    refs.cardContainer.innerHTML = photosTemplate(photos);
+}
+
