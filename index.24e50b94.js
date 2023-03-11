@@ -1,2 +1,0 @@
-const e={cardContainer:document.querySelector(".gallery"),searchForm:document.querySelector(".search-form")},t=new class{fetchItems(){return fetch("https://pixabay.com/api/?key=4241449-e1fad7b12dc666345bb2e99a8&q=yellow+flowers&image_type=photo").then((e=>e))}get query(){return this.fetchItems}constructor(){this.searchQuery="dog",this.page=1}};e.searchForm.addEventListener("submit",(function(e){e.preventDefault();e.currentTarget;t.query=e.currentTarget.elements.searchQuery.value,t.fetchItems().then((e=>{console.log(e)}))}));
-//# sourceMappingURL=index.24e50b94.js.map
