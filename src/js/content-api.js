@@ -1,4 +1,5 @@
-import Notiflix from 'notiflix';
+import { Report } from 'notiflix/build/notiflix-report-aio';
+import { Loading } from 'notiflix/build/notiflix-loading-aio';
 const axios = require('axios').default;
 const URL = 'https://pixabay.com/api/';
 const API_KEY = '34241449-e1fad7b12dc666345bb2e99a8';
@@ -7,6 +8,8 @@ export default class ApiContent {
     constructor() {
         this.searchQuery = '';
         this.page = 1;
+        this.perPage = 40;
+        this.isDoing = false;
     }
 
     async fetchItems() {
@@ -14,27 +17,34 @@ export default class ApiContent {
         const searchParams = new URLSearchParams({
             key: API_KEY,
             q: this.searchQuery,
-            // q: 'dog',
             image_type: 'photo',
             orientation: 'horizontal',
             safesearch: true,
             per_page: this.perPage,
             page: this.page,
         });
-            // console.log(searchParams.q); 
-        // Loading.circle();
+
+        Loading.circle("Loading...");
+        this.isDoing = true;
         try {
             const response = await axios.get(URL, { params: searchParams });
-            //   Loading.remove();
-            //   this.page += 1;
-            // console.log(response.data.totalHits); 
-
+              Loading.remove();
+            this.incrementPage();
+            this.isDoing = false;
             return response.data;
-
         } catch {
-            Notiflix.Notify.failure('The request was not processed');
-            //   Loading.remove();
+            Report.info('The request was not processed');
+            Loading.remove();
+            this.isDoing = false;
         }
+    }
+
+    incrementPage() {
+        this.page += 1;
+    }
+
+    resetPage() {
+        this.page = 1;
     }
 
     get query() {

@@ -1,46 +1,68 @@
-// import './css/styles.css';
-// import debounce from "lodash.debounce";
-
-import Notiflix from 'notiflix';
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import ApiContent from "./js/content-api";
 import photosTemplate from './js/img-templates';
-// Notiflix.Notify.success('Sol lucet omnibus');
-// Notiflix.Notify.failure('Qui timide rogat docet negare');
-// Notiflix.Notify.warning('Memento te hominem esse');
-// Notiflix.Notify.info('Cogito ergo sum');
+import SimpleLightbox from "simplelightbox";
+import "simplelightbox/dist/simple-lightbox.min.css";
+import throttle from "lodash.throttle";
+
+let lightbox = new SimpleLightbox('.gallery a', {
+  captionDelay: 250,
+  animationSpeed: 200,
+  fadeSpeed: 150,
+});
 
 const refs = {
     cardContainer: document.querySelector('.gallery'),
     searchForm: document.querySelector('.search-form'),
+    loadMoreBtn: document.querySelector('.load-more'),
 }
 
 const apiContent = new ApiContent();
 
 refs.searchForm.addEventListener("submit", onSearch);
+refs.loadMoreBtn.addEventListener("click", searchNext);
+window.addEventListener("scroll", throttle(searchNext, 200)); 
 
 function onSearch(e) {
     e.preventDefault();
 
-    const form = e.currentTarget;
     apiContent.query = e.currentTarget.elements.searchQuery.value.trim();
+    apiContent.resetPage();
+
     if (apiContent.query === "") {
-        return Notiflix.Notify.failure('Please enter search words');
+        return Notify.failure('Please enter search words');
     }
 
+    clearCardsContainer();
     const items = apiContent.fetchItems();
     items.then((data) => {
         if (data.totalHits === 0) {
-            return Notiflix.Notify.failure('There are no images matching your search query. Please try again');
+            return Notify.failure('There are no images matching your search query. Please try again');
         }
-        // console.log(data.totalHits);
-        // console.log(data.hits);
+        Notify.success(`Hooray! We found ${data.totalHits} images.`);
+        
         markupPhotos(data);
+        refs.loadMoreBtn.classList.remove('is-hidden');
     });
-    
 }
  
-function markupPhotos(photos) {
-    // refs.cardContainer.insertAdjacentHTML('beforeend', photosTemplate(photos)); 
-    refs.cardContainer.innerHTML = photosTemplate(photos);
+function searchNext() {
+    if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 1000) {
+        if (apiContent.isDoing === false) {
+            refs.loadMoreBtn.classList.add('is-hidden');
+            apiContent.fetchItems().then((data) => {
+                markupPhotos(data);
+            });  
+            refs.loadMoreBtn.classList.remove('is-hidden');
+        }
+    }
 }
 
+function markupPhotos(photos) {
+    refs.cardContainer.insertAdjacentHTML('beforeend', photosTemplate(photos)); 
+    lightbox.refresh();
+}
+
+function clearCardsContainer() {
+    refs.cardContainer.innerHTML = ""; 
+}
